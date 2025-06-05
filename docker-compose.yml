@@ -7,6 +7,7 @@ services:
   traefik:
     image: "traefik:v3.4"
     container_name: "traefik"
+    hostname: "traefik"
     ports:
       - "80:80"
       - "443:443"
@@ -25,6 +26,7 @@ services:
   whoami:
     image: "traefik/whoami"
     container_name: "whoami-service"
+    hostname: "whoami-service"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.whoami.rule=Host(`whoami.${PUBLIC_HOSTNAME}`)"
