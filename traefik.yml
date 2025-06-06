@@ -1,31 +1,46 @@
+# traefik.yml
+# Configuration of the Traefik API and Dashboard
+
 api:
-  dashboard: true
+
+  dashboard: true # Enable Dashboard UI
+  # Disable insecure before production: https://doc.traefik.io/traefik/operations/api/
+  # And turn off the 8080:8080 port forwarding
   insecure: true
-  debug: false
+  debug: true
+
 entryPoints:
+
   web:
     address: ":80"
     http:
-      redirections:
+      redirections: # Permament redirection to HTTPS (to: websecure entryPoint)
         entryPoint:
           to: websecure
           scheme: https
   websecure:
     address: ":443"
+
 serversTransport:
-  insecureSkipVerify: true
+
+  insecureSkipVerify: false
+
 providers:
+
   docker:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
     network: default-network
+
 certificatesResolvers:
+
   letencrypt:
     acme:
       email: "kacprzakmarek92@gmail.com"
       storage: /certs/acme.json
       # caServer: https://acme-v02.api.letsencrypt.org/directory # prod (default)
-      caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging
+      caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging, clear acme.json before prod
       dnsChallenge:
         provider: cloudflare
-        delayBeforeCheck: 10
+        propagation:
+          delayBeforeCheck: 10

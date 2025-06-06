@@ -1,4 +1,5 @@
 networks:
+
   default-network:
     name: default-network
 
@@ -8,16 +9,26 @@ services:
     image: "traefik:v3.4"
     container_name: "traefik"
     hostname: "traefik"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${PUBLIC_HOSTNAME}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
     ports:
       - "80:80"
       - "443:443"
+      # The line below should be removed before production: https://doc.traefik.io/traefik/operations/api/
       - "8080:8080"
     environment:
       - "CLOUDFLARE_EMAIL=${CF_API_EMAIL}"
       - "CLOUDFLARE_DNS_API_TOKEN=${CF_API_TOKEN}"
     volumes:
+      # Docker events
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      # Persising certificates
       - "traefik:/certs"
+      # Static file config (:ro - read only)
       - "./traefik.yml:/traefik.yml:ro"
     restart: unless-stopped
     networks:
@@ -25,19 +36,22 @@ services:
 
   whoami:
     image: "traefik/whoami"
-    container_name: "whoami-service"
-    hostname: "whoami-service"
+    container_name: "whoami"
+    hostname: "whoami"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.whoami.rule=Host(`whoami.${PUBLIC_HOSTNAME}`)"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-      - "traefik.http.routers.whoami.tls=true"
-      - "traefik.http.routers.whoami.tls.certresolver=letencrypt"
-      - "traefik.http.services.whoami.loadbalancer.server.port=80"
+      - "traefik.http.routers.whoami.entrypoints=websecure" # This router will only listen for traffic on 443 port
+      - "traefik.http.routers.whoami.tls.certresolver=letencrypt" # Implicitly enables TLS for this router
+      - "traefik.http.services.whoami.loadbalancer.server.port=80" # Hey traefik, forward traffic to this port!
+      #- traefik.enable=true
+      #- subdomain=name-of-the-subdomain
+      #- traefik.http.services.service-name.loadbalancer.server.port=8080
     restart: unless-stopped
     networks:
       - default-network
 
 volumes:
+
   traefik:
     name: traefik
