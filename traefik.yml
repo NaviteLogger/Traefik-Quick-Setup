@@ -42,5 +42,4 @@ certificatesResolvers:
       caServer: https://acme-staging-v02.api.letsencrypt.org/directory # staging, clear acme.json before prod
       dnsChallenge:
         provider: cloudflare
-        propagation:
-          delayBeforeCheck: 10
+        delayBeforeCheck: 10
